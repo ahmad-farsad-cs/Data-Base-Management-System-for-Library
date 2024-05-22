@@ -1,0 +1,37 @@
+1- “les abonnés peuvent commander des livres. Ils peuvent en commander trois au maximum”.
+/* Max 3 commandes */
+CREATE OR REPLACE FUNCTION enforce_max_3_command() RETURNS trigger AS $$
+DECLARE
+    max_command_count INTEGER := 3;
+    Quantite INTEGER := 0;
+    must_check BOOLEAN := false;
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        must_check := true;
+    END IF;
+
+    IF TG_OP = 'UPDATE' THEN
+        IF (NEW.owner != OLD.owner) THEN
+            must_check := true;
+        END IF;
+    END IF;
+
+    IF must_check THEN
+        -- prevent concurrent inserts from multiple transactions
+        LOCK TABLE Commande IN EXCLUSIVE MODE;
+
+        SELECT INTO Quantite COUNT(*) 
+        FROM Commande 
+        WHERE owner = NEW.owner;
+
+        IF Quantite >= max_command_count THEN
+            RAISE EXCEPTION 'Cannot insert more than % commande for each user.', max_command_count;
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER enforce_max_3_command 
+    BEFORE INSERT OR UPDATE ON Commande
+    FOR EACH ROW EXECUTE PROCEDURE enforce_max_3_command();

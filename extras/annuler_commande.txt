@@ -1,0 +1,19 @@
+2- “Une commande peut être annulée ou honorée si le livre commandé a finalement été emprunté”.
+
+CREATE OR REPLACE FUNCTION cancel_commande() 
+   RETURNS TRIGGER 
+   LANGUAGE PLPGSQL
+AS $$
+BEGIN
+   -- trigger logic
+   if (EXISTS(SELECT * FROM Commande WHERE Livre_id = NEW.Livre_id AND No_adherent = NEW.No_adherent) )THEN
+   	DELETE FROM Commande WHERE Livre_id = NEW.Livre_id AND No_adherent = NEW.No_adherent;
+   END IF;
+END;
+$$
+
+CREATE TRIGGER check_cancel_commande
+    AFTER INSERT ON Emprunte
+    FOR EACH ROW    
+    /* Action if condition true */
+    EXECUTE FUNCTION cancel_commande();

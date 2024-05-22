@@ -1,0 +1,5 @@
+Vous pouvez utiliser Script.sql comme solution initial. 
+
+Script2.sql est option.
+
+Fichier Extra contain other possible solutions (si vous ne trouvez pas ce que vous attendez dans PDF ou la solution principale)
